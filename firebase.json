@@ -1,0 +1,35 @@
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "wondertale-app",
+          "appId": "1:1059459126600:android:2eea57300bf5ec28234f7d",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "wondertale-app",
+          "configurations": {
+            "android": "1:1059459126600:android:2eea57300bf5ec28234f7d",
+            "ios": "1:1059459126600:ios:35757594bd3a5ed3234f7d"
+          }
+        }
+      }
+    }
+  }
+}
