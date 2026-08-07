@@ -85,6 +85,9 @@ class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
         centerTitle: true,
         iconTheme: const IconThemeData(color: textPrimary),
         titleTextStyle: GoogleFonts.outfit(

@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/localization/app_localizations.dart';
+import '../core/constants/app_constants.dart';
+import '../widgets/language_selector_sheet.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -61,13 +63,23 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     final appState = Provider.of<AppStateProvider>(context);
     final loc = AppLocalizations.of(context);
     final size = MediaQuery.of(context).size;
+    final currentLang = AppConstants.supportedLanguages.firstWhere(
+      (l) => l.code == appState.language,
+      orElse: () => AppConstants.supportedLanguages.first,
+    );
 
     return Scaffold(
       body: Stack(
         children: [
-          // ── Deep Space Background ──────────────────────────────────────────
+          // ── Deep Magical Night Sky Background ─────────────────────────────
           Container(
-            decoration: const BoxDecoration(gradient: AppTheme.bgGradient),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF0B0720), Color(0xFF140D36), Color(0xFF1E114D)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
           ),
 
           // ── Star field ────────────────────────────────────────────────────
@@ -89,7 +101,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.violet.withValues(alpha: _glowAnim.value * 0.35),
+                      AppTheme.violet.withValues(alpha: _glowAnim.value * 0.45),
                       Colors.transparent,
                     ],
                   ),
@@ -109,7 +121,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.pink.withValues(alpha: _glowAnim.value * 0.25),
+                      AppTheme.pink.withValues(alpha: _glowAnim.value * 0.35),
                       Colors.transparent,
                     ],
                   ),
@@ -124,6 +136,42 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: Column(
                 children: [
+                  // ── Top Language Selector ──────────────────────────────────
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: GestureDetector(
+                        onTap: () => showLanguageSelectorSheet(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(currentLang.flag, style: const TextStyle(fontSize: 16)),
+                              const SizedBox(width: 6),
+                              Text(
+                                currentLang.code.toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white70, size: 18),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
                   const Spacer(flex: 2),
 
                   // ── Logo ──────────────────────────────────────────────────
@@ -160,7 +208,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                     ),
                   ),
 
-                  const SizedBox(height: 36),
+                  const SizedBox(height: 32),
 
                   // ── Title with gradient ────────────────────────────────────
                   ShaderMask(
@@ -185,7 +233,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
-                      color: Colors.white.withValues(alpha: 0.62),
+                      color: Colors.white.withValues(alpha: 0.85),
                       height: 1.5,
                       fontWeight: FontWeight.w400,
                     ),
@@ -197,75 +245,106 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _badge('🎭', 'AI Masallar'),
-                      const SizedBox(width: 12),
-                      _badge('🎨', 'İllüstrasyon'),
-                      const SizedBox(width: 12),
-                      _badge('🔊', 'Sesli Okuma'),
+                      _badge('🎭', _badge1Label(appState.language)),
+                      const SizedBox(width: 10),
+                      _badge('🎨', _badge2Label(appState.language)),
+                      const SizedBox(width: 10),
+                      _badge('🔊', _badge3Label(appState.language)),
                     ],
                   ),
 
                   const SizedBox(height: 36),
 
-                  // ── Google Sign-In Button ─────────────────────────────────
-                  _GlowButton(
+                  // ── High-Contrast Google Sign-In Button ───────────────────
+                  _ScaleButton(
                     onTap: appState.signInWithGoogle,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
+                    child: Container(
+                      width: double.infinity,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
                           ),
-                          child: const Center(
-                            child: Text('G', style: TextStyle(
-                              fontSize: 15,
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Center(
+                              child: Text('G', style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF4285F4),
+                              )),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            loc.get('loginGoogle'),
+                            style: const TextStyle(
+                              fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF4285F4),
-                            )),
+                              color: Color(0xFF1E293B),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          loc.get('loginGoogle'),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
                   const SizedBox(height: 14),
 
-                  // ── Guest Button ──────────────────────────────────────────
-                  GestureDetector(
+                  // ── High-Contrast Guest Button ────────────────────────────
+                  _ScaleButton(
                     onTap: appState.signInAnonymously,
                     child: Container(
                       width: double.infinity,
                       height: 56,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(18),
+                        color: const Color(0xFF281C54),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.18),
+                          color: AppTheme.violet.withValues(alpha: 0.5),
                           width: 1.5,
                         ),
-                        color: Colors.white.withValues(alpha: 0.05),
-                      ),
-                      child: Center(
-                        child: Text(
-                          loc.get('continueGuest'),
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white70,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.violet.withValues(alpha: 0.15),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.person_rounded,
+                            color: AppTheme.purple,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            loc.get('continueGuest'),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -275,8 +354,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                     loc.get('loginRequired'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.white.withValues(alpha: 0.35),
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.65),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -287,6 +366,33 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+
+  String _badge1Label(String lang) {
+    switch (lang) {
+      case 'de': return 'KI-Stories';
+      case 'ar': return 'قصص AI';
+      case 'en': return 'AI Stories';
+      default: return 'AI Masallar';
+    }
+  }
+
+  String _badge2Label(String lang) {
+    switch (lang) {
+      case 'de': return 'Illustration';
+      case 'ar': return 'رسومات';
+      case 'en': return 'Illustration';
+      default: return 'İllüstrasyon';
+    }
+  }
+
+  String _badge3Label(String lang) {
+    switch (lang) {
+      case 'de': return 'Vorlesen';
+      case 'ar': return 'صوتي';
+      case 'en': return 'Audio Voice';
+      default: return 'Sesli Okuma';
+    }
   }
 
   Widget _badge(String emoji, String label) {
@@ -315,17 +421,17 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   }
 }
 
-// ── Glowing Gradient Button ──────────────────────────────────────────────────
-class _GlowButton extends StatefulWidget {
+// ── Interactive Scale Button ──────────────────────────────────────────────────
+class _ScaleButton extends StatefulWidget {
   final Widget child;
   final VoidCallback onTap;
-  const _GlowButton({required this.child, required this.onTap});
+  const _ScaleButton({required this.child, required this.onTap});
 
   @override
-  State<_GlowButton> createState() => _GlowButtonState();
+  State<_ScaleButton> createState() => _ScaleButtonState();
 }
 
-class _GlowButtonState extends State<_GlowButton>
+class _ScaleButtonState extends State<_ScaleButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _scale;
@@ -336,7 +442,7 @@ class _GlowButtonState extends State<_GlowButton>
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 120),
-      lowerBound: 0.95,
+      lowerBound: 0.96,
       upperBound: 1.0,
     )..value = 1.0;
     _scale = _ctrl;
@@ -354,12 +460,7 @@ class _GlowButtonState extends State<_GlowButton>
       child: AnimatedBuilder(
         animation: _scale,
         builder: (_, child) => Transform.scale(scale: _scale.value, child: child),
-        child: Container(
-          width: double.infinity,
-          height: 56,
-          decoration: AppTheme.glowButton(radius: 18),
-          child: Center(child: widget.child),
-        ),
+        child: widget.child,
       ),
     );
   }

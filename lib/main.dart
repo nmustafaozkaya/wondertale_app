@@ -55,6 +55,8 @@ class WondertaleApp extends StatelessWidget {
             supportedLocales: const [
               Locale('tr', 'TR'),
               Locale('en', 'US'),
+              Locale('de', 'DE'),
+              Locale('ar', 'SA'),
             ],
             localizationsDelegates: const [
               AppLocalizationsDelegate(),

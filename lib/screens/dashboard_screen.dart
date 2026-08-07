@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
 import '../providers/story_provider.dart';
 import '../core/theme/app_theme.dart';
+import '../core/localization/app_localizations.dart';
 
 import '../widgets/story_card.dart';
 import 'story_detail_screen.dart';
-import 'subscription_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback onCreateNewPressed;
@@ -34,6 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
     final storyProv = Provider.of<StoryProvider>(context);
+    final loc = AppLocalizations.of(context);
     final stories = storyProv.savedStories;
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
@@ -71,14 +72,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   backgroundColor: Colors.transparent,
                   pinned: true,
                   elevation: 0,
+                  scrolledUnderElevation: 0,
+                  surfaceTintColor: Colors.transparent,
                   toolbarHeight: 80,
                   title: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        width: 46,
+                        height: 46,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: AppTheme.primaryGradient,
+                          image: appState.userPhotoUrl != null
+                              ? DecorationImage(
+                                  image: NetworkImage(appState.userPhotoUrl!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                           boxShadow: [
                             BoxShadow(
                               color: AppTheme.purple.withValues(alpha: 0.3),
@@ -86,21 +96,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             )
                           ],
                         ),
-                        child: const Text('👋', style: TextStyle(fontSize: 20)),
+                        child: appState.userPhotoUrl == null
+                            ? const Center(child: Text('👋', style: TextStyle(fontSize: 20)))
+                            : null,
                       ),
                       const SizedBox(width: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Hoş Geldin!',
-                            style: TextStyle(
+                          Text(
+                            loc.get('welcome'),
+                            style: const TextStyle(
                               fontSize: 14,
                               color: AppTheme.textSecondary,
                             ),
                           ),
                           Text(
-                            appState.user?.email?.split('@').first ?? 'Kullanıcı',
+                            appState.userName,
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
@@ -153,7 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          appState.isPremium ? 'Sınırsız Sihir (Premium)' : 'Günlük Masal Hakkı',
+                                          appState.isPremium ? loc.get('unlimitedAccess') : loc.get('dailyQuotaTitle'),
                                           style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -163,10 +175,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         const SizedBox(height: 4),
                                         Text(
                                           appState.isPremium 
-                                              ? 'İstediğin kadar masal oluşturabilirsin! ✨' 
+                                              ? loc.get('dailyQuotaUnlimitedDesc')
                                               : (appState.remainingQuota > 0 
-                                                  ? 'Bugün ${appState.remainingQuota} masal daha oluşturabilirsin.' 
-                                                  : 'Bugünlük sihrin tükendi!'),
+                                                  ? '${loc.get('quotaLeft')}${appState.remainingQuota}'
+                                                  : loc.get('dailyQuotaDepleted')),
                                           style: const TextStyle(
                                             fontSize: 13,
                                             color: AppTheme.textSecondary,
@@ -189,51 +201,113 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ],
                                 ],
                               ),
-                              if (!appState.isPremium && appState.remainingQuota == 0) ...[
-                                const SizedBox(height: 20),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: () {
-                                          appState.adService.showRewardedAd(
-                                            onUserEarnedReward: () {
-                                              appState.addAdRewardBonus();
-                                            },
-                                          );
-                                        },
-                                        icon: const Icon(Icons.play_circle_fill_rounded, size: 18),
-                                        label: const Text('İzle (+1)', style: TextStyle(fontSize: 13)),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppTheme.textPrimary,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: () {
-                                          Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
-                                        },
-                                        icon: const Icon(Icons.workspace_premium_rounded, size: 18),
-                                        label: const Text('Premium', style: TextStyle(fontSize: 13)),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppTheme.gold,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
                             ],
                           ),
                         ),
+
+                        // 🎬 Video Watch Bonus Banner (If non-premium)
+                        if (!appState.isPremium) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFF1E1B4B),
+                                  AppTheme.violet,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.violet.withValues(alpha: 0.3),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.play_circle_fill_rounded, color: AppTheme.gold, size: 28),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        loc.get('watchVideoBannerTitle'),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        loc.get('watchVideoBannerDesc'),
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(alpha: 0.85),
+                                          fontSize: 12,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    appState.adService.showRewardedAd(
+                                      onUserEarnedReward: () {
+                                        appState.addAdRewardBonus();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: const Text('🎉 +1 Masal Hakkı Kazandınız!'),
+                                            backgroundColor: AppTheme.teal,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                          ),
+                                        );
+                                      },
+                                      onAdNotReady: (msg) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(msg),
+                                            backgroundColor: Colors.orange,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.gold,
+                                    foregroundColor: Colors.black,
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text(
+                                    '+1 İzle',
+                                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+
                         const SizedBox(height: 32),
 
                         // Create Button
@@ -253,14 +327,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 )
                               ],
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
-                                SizedBox(width: 12),
+                                const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 28),
+                                const SizedBox(width: 12),
                                 Text(
-                                  'Yeni Masal Oluştur',
-                                  style: TextStyle(
+                                  loc.get('createNewStory'),
+                                  style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
@@ -277,12 +351,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Son Oluşturulanlar',
-                              style: TextStyle(
+                            Text(
+                              loc.get('recentStories'),
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.white,
+                                color: AppTheme.textPrimary,
                                 letterSpacing: -0.3,
                               ),
                             ),

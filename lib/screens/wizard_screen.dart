@@ -6,6 +6,9 @@ import '../core/constants/app_constants.dart';
 import '../core/theme/app_theme.dart';
 import '../core/localization/app_localizations.dart';
 import '../widgets/option_chip.dart';
+import '../widgets/language_selector_sheet.dart';
+import '../widgets/banner_ad_widget.dart';
+import '../widgets/app_back_button.dart';
 import 'generation_screen.dart';
 
 class WizardScreen extends StatefulWidget {
@@ -18,6 +21,7 @@ class WizardScreen extends StatefulWidget {
 class _WizardScreenState extends State<WizardScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _customPromptController = TextEditingController();
+  bool _isCustomTopicUnlocked = false;
 
   @override
   void initState() {
@@ -29,6 +33,9 @@ class _WizardScreenState extends State<WizardScreen> {
       }
       if (storyProv.customPrompt.isNotEmpty) {
         _customPromptController.text = storyProv.customPrompt;
+        setState(() {
+          _isCustomTopicUnlocked = true;
+        });
       }
     });
   }
@@ -45,7 +52,6 @@ class _WizardScreenState extends State<WizardScreen> {
     final appState = Provider.of<AppStateProvider>(context);
     final storyProv = Provider.of<StoryProvider>(context);
     final loc = AppLocalizations.of(context);
-    final isTr = appState.language == 'tr';
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
@@ -81,52 +87,65 @@ class _WizardScreenState extends State<WizardScreen> {
                   backgroundColor: Colors.transparent,
                   pinned: false,
                   floating: true,
-                  expandedHeight: 72,
-                  flexibleSpace: FlexibleSpaceBar(
-                    titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                    title: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        ShaderMask(
-                          shaderCallback: (b) => AppTheme.primaryGradient.createShader(b),
-                          child: const Text(
-                            'Wondertale',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                              color: AppTheme.textPrimary,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
+                  elevation: 0,
+                  scrolledUnderElevation: 0,
+                  surfaceTintColor: Colors.transparent,
+                  leading: const AppBackButton(),
+                  title: ShaderMask(
+                    shaderCallback: (b) => AppTheme.primaryGradient.createShader(b),
+                    child: const Text(
+                      'Wondertale',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                  centerTitle: false,
+                  actions: [
+                    // Language Selector Button
+                    GestureDetector(
+                      onTap: () => showLanguageSelectorSheet(context),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppTheme.violet.withValues(alpha: 0.2)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.violet.withValues(alpha: 0.08),
+                              blurRadius: 8,
+                            )
+                          ],
                         ),
-                        const Spacer(),
-                        // Language Toggle
-                        GestureDetector(
-                          onTap: () {
-                            final newLang = appState.language == 'tr' ? 'en' : 'tr';
-                            appState.setLanguage(newLang);
-                            storyProv.setStoryLanguage(newLang);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.07),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                        child: Row(
+                          children: [
+                            Text(
+                              AppConstants.supportedLanguages.firstWhere(
+                                (l) => l.code == appState.language,
+                                orElse: () => AppConstants.supportedLanguages.first,
+                              ).flag,
+                              style: const TextStyle(fontSize: 14),
                             ),
-                            child: Text(
-                              appState.language == 'tr' ? '🇹🇷 TR' : '🇬🇧 EN',
+                            const SizedBox(width: 6),
+                            Text(
+                              appState.language.toUpperCase(),
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                color: AppTheme.textPrimary,
                               ),
                             ),
-                          ),
+                            const Icon(Icons.arrow_drop_down_rounded, color: AppTheme.textSecondary, size: 18),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
 
                 SliverPadding(
@@ -140,19 +159,28 @@ class _WizardScreenState extends State<WizardScreen> {
                       // ── Section: Age ──────────────────────────────────────
                       _SectionHeader(emoji: '🎂', title: loc.get('selectAge')),
                       const SizedBox(height: 14),
-                      _AgeSelector(storyProv: storyProv, isTr: isTr),
+                      _AgeSelector(storyProv: storyProv, langCode: appState.language),
                       const SizedBox(height: 28),
 
                       // ── Section: Theme ────────────────────────────────────
                       _SectionHeader(emoji: '🎨', title: loc.get('selectTheme')),
                       const SizedBox(height: 14),
-                      Wrap(
-                        children: AppConstants.themes.map((t) {
-                          // if customPrompt is active, don't show any theme as selected
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 2.7,
+                        ),
+                        itemCount: AppConstants.themes.length,
+                        itemBuilder: (context, index) {
+                          final t = AppConstants.themes[index];
                           final isSelected = storyProv.customPrompt.isEmpty && storyProv.selectedTheme == t['id'];
                           return OptionChip(
-                            label: isTr ? t['labelTr']! : t['labelEn']!,
-                            subtitle: isTr ? t['descTr']! : t['descEn']!,
+                            label: AppConstants.getThemeLabel(t, appState.language),
+                            subtitle: AppConstants.getThemeDesc(t, appState.language),
                             icon: t['icon'],
                             isSelected: isSelected,
                             onTap: () {
@@ -160,37 +188,162 @@ class _WizardScreenState extends State<WizardScreen> {
                               storyProv.setTheme(t['id']!);
                             },
                           );
-                        }).toList(),
+                        },
                       ),
                       const SizedBox(height: 16),
-                      // Custom Topic Input
-                      TextField(
-                        controller: _customPromptController,
-                        maxLength: 100,
-                        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
-                        onChanged: storyProv.setCustomPrompt,
-                        decoration: InputDecoration(
-                          hintText: isTr ? 'Veya kendi konunu yaz... (Örn: Mars\'a giden mor bir dinozor)' : 'Or write your own topic...',
-                          counterStyle: const TextStyle(color: AppTheme.textSecondary),
-                          prefixIcon: const Icon(Icons.edit_rounded, color: AppTheme.violet),
+                      // Custom Topic Input (Locked behind Video Ad if Non-Premium)
+                      if (!appState.isPremium && !_isCustomTopicUnlocked)
+                        GestureDetector(
+                          onTap: () {
+                            appState.adService.showRewardedAd(
+                              onUserEarnedReward: () {
+                                appState.addAdRewardBonus();
+                                setState(() {
+                                  _isCustomTopicUnlocked = true;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('🎉 Özel Konu Yazma Kilidi Açıldı!'),
+                                    backgroundColor: AppTheme.teal,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                );
+                              },
+                              onAdNotReady: (msg) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(msg),
+                                    backgroundColor: Colors.orange,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppTheme.gold.withValues(alpha: 0.4), width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.gold.withValues(alpha: 0.1),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.gold.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.lock_rounded, color: AppTheme.gold, size: 22),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Kendi Konunu Yaz',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Video izleyerek özel konu yazma hakkını aç',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: AppTheme.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    gradient: AppTheme.goldGradient,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    '🎬 Video İzle & Aç',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        TextField(
+                          controller: _customPromptController,
+                          maxLength: 100,
+                          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
+                          onChanged: storyProv.setCustomPrompt,
+                          decoration: InputDecoration(
+                            hintText: _customPromptHint(appState.language),
+                            counterStyle: const TextStyle(color: AppTheme.textSecondary),
+                            prefixIcon: const Icon(Icons.edit_rounded, color: AppTheme.violet),
+                            suffixIcon: Container(
+                              margin: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppTheme.teal.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.check_circle_rounded, color: AppTheme.teal, size: 14),
+                                  SizedBox(width: 4),
+                                  Text('Açık', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.teal)),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
                       const SizedBox(height: 28),
 
                       // ── Section: Mood ─────────────────────────────────────
                       _SectionHeader(emoji: '🌈', title: loc.get('selectMood')),
                       const SizedBox(height: 14),
-                      Wrap(
-                        children: AppConstants.moods.map((m) {
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 2.7,
+                        ),
+                        itemCount: AppConstants.moods.length,
+                        itemBuilder: (context, index) {
+                          final m = AppConstants.moods[index];
                           final isSelected = storyProv.selectedMood == m['id'];
                           return OptionChip(
-                            label: isTr ? m['labelTr']! : m['labelEn']!,
-                            subtitle: isTr ? m['descTr']! : m['descEn']!,
+                            label: AppConstants.getMoodLabel(m, appState.language),
+                            subtitle: AppConstants.getMoodDesc(m, appState.language),
                             icon: m['icon'],
                             isSelected: isSelected,
                             onTap: () => storyProv.setMood(m['id']!),
                           );
-                        }).toList(),
+                        },
                       ),
                       const SizedBox(height: 28),
 
@@ -228,16 +381,27 @@ class _WizardScreenState extends State<WizardScreen> {
                             );
                           }
 
-                          if (!appState.isPremium && appState.adService.isInterstitialAdLoaded) {
-                            appState.adService.showInterstitialAd(
-                              onAdClosed: navigate,
-                            );
+                          // Play Rewarded or Interstitial Ad for non-premium users on generation
+                          if (!appState.isPremium) {
+                            if (appState.adService.isRewardedAdLoaded) {
+                              appState.adService.showRewardedAd(
+                                onUserEarnedReward: () {
+                                  appState.addAdRewardBonus();
+                                  navigate();
+                                },
+                              );
+                            } else {
+                              appState.adService.showInterstitialAd(
+                                onAdClosed: navigate,
+                              );
+                            }
                           } else {
                             navigate();
                           }
                         },
                       ),
                       const SizedBox(height: 12),
+                      const BannerAdWidget(),
                     ]),
                   ),
                 ),
@@ -268,7 +432,7 @@ class _WizardScreenState extends State<WizardScreen> {
                 loc.get('dailyLimitReached'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.textPrimary,
                   fontWeight: FontWeight.w800,
                   fontSize: 20,
                 ),
@@ -335,17 +499,10 @@ class _QuotaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F1338),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.gold.withValues(alpha: 0.25), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.gold.withValues(alpha: 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+      decoration: AppTheme.glassCard(
+        bgColor: AppTheme.bgCard,
+        borderColor: AppTheme.gold.withValues(alpha: 0.3),
+        radius: 20,
       ),
       child: Row(
         children: [
@@ -368,15 +525,15 @@ class _QuotaCard extends StatelessWidget {
                       ? loc.get('unlimitedAccess')
                       : '${loc.get('quotaLeft')}${appState.remainingQuota}',
                   style: const TextStyle(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                     fontSize: 14,
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 if (!appState.isPremium)
                   Text(
-                    '3 ücretsiz masal / gün',
-                    style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                    loc.get('dailyQuotaSub'),
+                    style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                   ),
               ],
             ),
@@ -436,9 +593,9 @@ class _SectionHeader extends StatelessWidget {
           title,
           style: const TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            letterSpacing: 0.2,
+            fontWeight: FontWeight.w800,
+            color: AppTheme.textPrimary,
+            letterSpacing: -0.3,
           ),
         ),
         const SizedBox(width: 10),
@@ -448,7 +605,7 @@ class _SectionHeader extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withValues(alpha: 0.15),
+                  AppTheme.violet.withValues(alpha: 0.25),
                   Colors.transparent,
                 ],
               ),
@@ -460,18 +617,46 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
+String _customPromptHint(String lang) {
+  switch (lang) {
+    case 'de':
+      return 'Oder schreibe dein eigenes Thema...';
+    case 'ar':
+      return 'أو اكتب موضوعك الخاص...';
+    case 'en':
+      return 'Or write your own topic...';
+    case 'tr':
+    default:
+      return 'Veya kendi konunu yaz... (Örn: Mars\'a giden mor bir dinozor)';
+  }
+}
+
 // ── Age Selector ──────────────────────────────────────────────────────────────
 class _AgeSelector extends StatelessWidget {
   final StoryProvider storyProv;
-  final bool isTr;
-  const _AgeSelector({required this.storyProv, required this.isTr});
+  final String langCode;
+  const _AgeSelector({required this.storyProv, required this.langCode});
+
+  String _ageLabel(String ageId, String lang) {
+    switch (lang) {
+      case 'de':
+        return '$ageId Jahre';
+      case 'ar':
+        return '$ageId سنوات';
+      case 'en':
+        return '$ageId Years';
+      case 'tr':
+      default:
+        return '$ageId Yaş';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final ages = [
-      {'id': '2-4', 'emoji': '🍼', 'label': isTr ? '2-4 Yaş' : '2-4 Years'},
-      {'id': '5-7', 'emoji': '🎒', 'label': isTr ? '5-7 Yaş' : '5-7 Years'},
-      {'id': '8-10', 'emoji': '📚', 'label': isTr ? '8-10 Yaş' : '8-10 Years'},
+      {'id': '2-4', 'emoji': '🍼', 'label': _ageLabel('2-4', langCode)},
+      {'id': '5-7', 'emoji': '🎒', 'label': _ageLabel('5-7', langCode)},
+      {'id': '8-10', 'emoji': '📚', 'label': _ageLabel('8-10', langCode)},
     ];
 
     return Row(
@@ -486,12 +671,12 @@ class _AgeSelector extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
                 gradient: selected ? AppTheme.primaryGradient : null,
-                color: selected ? null : const Color(0xFF0F1338),
+                color: selected ? null : Colors.white,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
                   color: selected
                       ? Colors.transparent
-                      : Colors.white.withValues(alpha: 0.1),
+                      : AppTheme.violet.withValues(alpha: 0.15),
                   width: 1.5,
                 ),
                 boxShadow: selected
@@ -511,9 +696,9 @@ class _AgeSelector extends StatelessWidget {
                   Text(
                     a['label']!,
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      color: selected ? Colors.white : Colors.white60,
+                      fontSize: 13,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                      color: selected ? Colors.white : AppTheme.textPrimary,
                     ),
                   ),
                 ],
@@ -570,9 +755,9 @@ class _GenerateButtonState extends State<_GenerateButton>
           decoration: widget.canGenerate
               ? AppTheme.glowButton(radius: 20)
               : BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.06),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  border: Border.all(color: AppTheme.violet.withValues(alpha: 0.2)),
                 ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -587,7 +772,7 @@ class _GenerateButtonState extends State<_GenerateButton>
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: widget.canGenerate ? Colors.white : Colors.white38,
+                  color: widget.canGenerate ? Colors.white : AppTheme.textSecondary,
                   letterSpacing: 0.3,
                 ),
               ),

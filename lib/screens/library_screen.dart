@@ -85,6 +85,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   backgroundColor: Colors.transparent,
                   pinned: true,
                   elevation: 0,
+                  scrolledUnderElevation: 0,
+                  surfaceTintColor: Colors.transparent,
                   title: Text(
                     loc.get('myLibrary'),
                     style: const TextStyle(

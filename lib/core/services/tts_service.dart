@@ -48,7 +48,22 @@ class TtsService {
 
   // Speak story text with appropriate language
   Future<void> speak(String text, String languageCode) async {
-    final ttsLang = languageCode == 'en' ? 'en-US' : 'tr-TR';
+    final String ttsLang;
+    switch (languageCode) {
+      case 'en':
+        ttsLang = 'en-US';
+        break;
+      case 'de':
+        ttsLang = 'de-DE';
+        break;
+      case 'ar':
+        ttsLang = 'ar-SA';
+        break;
+      case 'tr':
+      default:
+        ttsLang = 'tr-TR';
+        break;
+    }
     await _flutterTts.setLanguage(ttsLang);
 
     if (text.isNotEmpty) {

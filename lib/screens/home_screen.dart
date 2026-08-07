@@ -68,9 +68,9 @@ class _FloatingNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     final items = [
-      const _NavItem(icon: Icons.home_rounded, label: 'Ana Sayfa'),
+      _NavItem(icon: Icons.home_rounded, label: loc.get('home')),
       _NavItem(icon: Icons.auto_stories_rounded, label: loc.get('myLibrary')),
-      const _NavItem(icon: Icons.person_rounded, label: 'Profil'),
+      _NavItem(icon: Icons.person_rounded, label: loc.get('profile')),
     ];
 
     return Padding(

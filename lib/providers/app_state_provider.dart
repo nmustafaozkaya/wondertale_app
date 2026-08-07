@@ -26,6 +26,22 @@ class AppStateProvider extends ChangeNotifier {
   AdService get adService => _adService;
   IapService get iapService => _iapService;
 
+  String get userName {
+    if (_user == null) return 'Ziyaretçi';
+    if (_user!.displayName != null && _user!.displayName!.trim().isNotEmpty) {
+      return _user!.displayName!.trim();
+    }
+    if (_user!.email != null && _user!.email!.trim().isNotEmpty) {
+      final parts = _user!.email!.split('@');
+      if (parts.isNotEmpty && parts.first.isNotEmpty) {
+        return parts.first;
+      }
+    }
+    return _user!.isAnonymous ? 'Misafir Kullanıcı' : 'Kullanıcı';
+  }
+
+  String? get userPhotoUrl => _user?.photoURL;
+
   int get remainingQuota {
     if (_isPremium) return 999;
     final totalAvailable = AppConstants.freeDailyQuota + _bonusQuotaEarned;
@@ -97,9 +113,12 @@ class AppStateProvider extends ChangeNotifier {
   // Increment Used Quota after story generation
   Future<void> consumeQuota() async {
     if (_isPremium) return;
+    _todayDateStr = DateTime.now().toIso8601String().substring(0, 10);
     _dailyQuotaUsed++;
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('quota_date', _todayDateStr);
     await prefs.setInt('daily_quota_used', _dailyQuotaUsed);
+    debugPrint('Quota consumed. Used: $_dailyQuotaUsed, Remaining: $remainingQuota');
     notifyListeners();
   }
 

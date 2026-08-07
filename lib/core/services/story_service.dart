@@ -105,28 +105,68 @@ class StoryService {
     required String childName,
     required String language,
   }) {
-    final hero = childName.trim().isNotEmpty
-        ? childName.trim()
-        : (language == 'tr' ? 'Sevimli Kahraman' : 'Little Hero');
-    final isTr = language == 'tr';
+    String defaultHero;
+    switch (language) {
+      case 'de':
+        defaultHero = 'Kleine Held';
+        break;
+      case 'ar':
+        defaultHero = 'البطل الصغير';
+        break;
+      case 'en':
+        defaultHero = 'Little Hero';
+        break;
+      case 'tr':
+      default:
+        defaultHero = 'Sevimli Kahraman';
+        break;
+    }
+
+    final hero = childName.trim().isNotEmpty ? childName.trim() : defaultHero;
 
     String title;
     String content;
 
     if (theme == 'space') {
-      title = isTr
-          ? '$hero ve Sihirli Yıldız Macerası'
-          : '$hero and the Magic Star';
-      content = isTr
-          ? 'Bir zamanlar, gökyüzünün en parlak köşesinde $hero adında cesur bir çocuk yaşardı. Gece olduğunda penceresinden yıldızlara bakar, onlara gülümserdi.\n\nBir akşam, gökyüzünden gümüş kanatlı küçük bir yıldız süzülüp $hero\'in odasına kondu. "Merhaba!" dedi yıldız sevinçle. "Gezegenler arası tatlı bir uyku macerasına çıkmaya hazır mısın?"\n\n$hero sevinçle başını salladı. Birlikte yumuşacık bulutların üzerine bastılar, Samanyolu\'nun renkli ışıkları arasında süzüldüler. Bütün uyku perileri $hero\'e tatlı rüyalar diledi. $hero yatağına döndüğünde gözlerini kapattı ve huzur dolu bir uykuya daldı.'
-          : 'Once upon a time, in a bright peaceful town, lived a curious child named $hero. Every night, $hero would gaze at the twinkling stars from the window.\n\nOne evening, a friendly silver star floated right down into $hero\'s room. "Hello $hero!" sang the star. "Would you like to join me on a peaceful journey across the gentle cosmos?"\n\n$hero smiled warmly and nodded. Together, they drifted across soft pastel clouds and listened to the calming lullaby of the galaxy. $hero tucked back into bed, feeling completely safe, happy, and ready for sweet dreams.';
+      switch (language) {
+        case 'de':
+          title = '$hero und der Zauberstern';
+          content = 'Es war einmal ein mutiges Kind namens $hero. Jede Nacht schaute $hero zu den leuchtenden Sternen auf und träumte von großen Abenteuern.\n\nEines Abends schwebte ein silberner Stern sanft in $hero\'s Zimmer. "Hallo!" rief der Stern freundlich. "Möchtest du eine Reise durch das ruhige Weltall machen?"\n\n$hero lächelte glücklich und nickte. Zusammen flogen sie über weiche Wolken und hörten dem sanften Wiegenlied der Planeten zu.\n\nAuf ihrer Reise trafen sie kleine glitzernde Kometen, die leise Lieder sangen. Der Mond wünschte $hero eine wunderschöne Nacht.\n\nVoller Freude und Geborgenheit kehrte $hero in sein kuscheliges Bett zurück und schlief friedlich mit den schönsten Träumen ein.';
+          break;
+        case 'ar':
+          title = '$hero والنجمة السحرية';
+          content = 'في يوم من الأيام، عاش طفل شجاع اسمه $hero. في كل ليلة، كان $hero ينظر إلى النجوم المتلألئة في السماء ويتخيل مغامرات رائعة.\n\nوفي أحد الأيام، هبطت نجمة فضية لطيفة إلى غرفة $hero. وقالت: "مرحباً $hero! هل تحب أن تخوض معي مغامرة هادئة بين الكواكب؟"\n\nابتسم $hero وسار مع النجمة بين السحب الناعمة. شاهدوا الكواكب الملونة واستمعوا إلى أنغام المجرة الهادئة.\n\nالتقوا بكويكبات صغيرة لامعة تعزف ألحاناً لطيفة، ورحب بهم القمر بابتسامة دافئة.\n\nوعندما عاد $hero إلى سريره، أغمض عينيه ونام بنوم هادئ وأحلام سعيدة جداً.';
+          break;
+        case 'en':
+          title = '$hero and the Magic Star';
+          content = 'Once upon a time, in a bright peaceful town, lived a curious child named $hero. Every night, $hero would gaze at the twinkling stars from the window and imagine grand magical journeys.\n\nOne evening, a friendly silver star floated right down into $hero\'s room. "Hello $hero!" sang the star warmly. "Would you like to join me on a peaceful journey across the gentle cosmos?"\n\n$hero smiled warmly and nodded. Together, they drifted across soft pastel clouds and listened to the calming lullaby of the galaxy.\n\nAlong the way, they met playful little shooting stars that painted soft golden ribbons across the night sky. The glowing moon waved gently, wishing $hero the sweetest night.\n\n$hero tucked back into bed feeling safe, happy, and fell into a deep, cozy sleep.';
+          break;
+        case 'tr':
+        default:
+          title = '$hero ve Sihirli Yıldız Macerası';
+          content = 'Bir zamanlar, gökyüzünün en parlak köşesinde $hero adında meraklı ve cesur bir çocuk yaşardı. Her gece penceresinden parıldayan yıldızları izler, onların dünyasını hayal ederdi.\n\nBir akşam, gökyüzünden gümüş kanatlı sevimli bir yıldız süzülüp $hero\'in odasına kondu. "Merhaba!" dedi yıldız neşeyle. "Gezegenler arası tatlı ve huzurlu bir uyku macerasına çıkmaya hazır mısın?"\n\n$hero sevinçle gülümsedi. Birlikte pamuk gibi yumuşacık bulutların üzerine bastılar, Samanyolu\'nun renkli ışıkları arasında süzüldüler.\n\nYolda altın saçlı tatlı kuyruklu yıldızlarla karşılaştılar. Yıldızlar $hero için neşeli ninniler söyledi. Ay dede gülümseyerek $hero\'e tatlı rüyalar diledi.\n\nYüreği mutlulukla dolan $hero sıcacık yatağına döndü, gözlerini kapattı ve huzur dolu derin bir uykuya daldı.';
+          break;
+      }
     } else {
-      title = isTr
-          ? '$hero ve Büyülü Orman Dostları'
-          : '$hero and the Enchanted Forest';
-      content = isTr
-          ? 'Güneşin altın gibi parıldadığı güzel bir günde, $hero yeşil ağaçlarla dolu büyülü bir ormana adım attı. Ormanda kuşlar neşeyle şarkı söylüyordu.\n\n$hero adımlarını atarken sevimli bir yavru tavşan karşısına çıktı. Tavşan, "Merhaba $hero! Bizimle meşe palamudu paylaşmak ister misin?" dedi. $hero sevinçle gülümsedi ve ormandaki tüm sevimli dostlarıyla yemeğini paylaştı.\n\nPaylaşmanın verdiği mutlulukla $hero\'in kalbi sıcacık oldu. Akşam olduğunda tatlı orman rüzgarı eserken $hero huzurla gözlerini kapattı.'
-          : 'On a golden sunlit morning, $hero stepped into an enchanted forest filled with ancient singing trees and friendly little woodland creatures.\n\nA fluffy little bunny hopped over to $hero with a big bright smile. "Welcome $hero! Will you join our picnic today?" asked the bunny. $hero happily shared apples and stories with every animal in the forest.\n\nHeart filled with warmth, generosity, and joy, $hero waved goodbye to the forest friends and settled down for a cozy, peaceful night.';
+      switch (language) {
+        case 'de':
+          title = '$hero und die Zauberwald-Freunde';
+          content = 'An einem sonnigen Morgen betrat $hero einen zauberhaften Wald voller singender Bäume und bunter Blumen.\n\nEin kleines Hässchen hüpfte zu $hero und sagte: "Hallo $hero! Willkommen in unserem Wald!" $hero teilte leckere Äpfel mit allen Waldtieren.\n\nGemeinsam tanzten sie unter den goldenen Sonnenstrahlen und lauschten den sanften Melodien des Baches.\n\nGlücklich und zufrieden winkte $hero den Tieren zum Abschied und schlief am Abend friedlich in seinem Bett ein.';
+          break;
+        case 'ar':
+          title = '$hero وأصدقاء الغابة السحرية';
+          content = 'في صباح مشرق، دخل $hero إلى غابة سحرية ملونة بالأشجار الجميلة والحيوانات اللطيفة.\n\nجاء أرنب صغير لطيف وقال: "أهلاً بك يا $hero في غابتنا!" شارك $hero طعامه مع الحيوانات وسط فرحة كبيرة.\n\nلعبوا معاً تحت أشعة الشمس الذهبية واستمعوا إلى صوت خرير الماء العذب.\n\nوعندما حل المساء، عاد $hero إلى سريره الدافيء ونام في أمان وهدوء تام.';
+          break;
+        case 'en':
+          title = '$hero and the Enchanted Forest';
+          content = 'On a golden sunlit morning, $hero stepped into an enchanted forest filled with ancient singing trees and friendly woodland creatures.\n\nA fluffy little bunny hopped over to $hero with a bright smile. "Welcome $hero! Will you join our picnic today?" asked the bunny. $hero happily shared fresh apples and laughter with everyone.\n\nThey played under the dappled sunlight, listened to the gentle rustle of leaves, and watched butterflies dance in harmony.\n\nHeart filled with warmth and peace, $hero waved goodbye to the forest friends and settled down for a cozy night.';
+          break;
+        case 'tr':
+        default:
+          title = '$hero ve Büyülü Orman Dostları';
+          content = 'Güneşin altın gibi parıldadığı güzel bir günde, $hero yeşil ağaçlarla dolu büyülü bir ormana adım attı. Ormanda kuşlar neşeyle şarkı söylüyordu.\n\n$hero adımlarını atarken sevimli bir yavru tavşan karşısına çıktı. Tavşan, "Merhaba $hero! Bizimle meşe palamudu paylaşmak ister misin?" dedi. $hero sevinçle gülümsedi ve tüm sevimli dostlarıyla ekmeğini paylaştı.\n\nRengarenk kelebeklerin dansını izlediler, tatlı dere suyunun şırıltısını dinlediler. Ormanın tüm sevimli canlıları $hero\'e teşekkür etti.\n\nPaylaşmanın verdiği mutlulukla $hero\'in kalbi sıcacık oldu. Akşam olduğunda tatlı orman rüzgarı eserken $hero yatağında huzurla gözlerini kapattı.';
+          break;
+      }
     }
 
     return StoryModel(

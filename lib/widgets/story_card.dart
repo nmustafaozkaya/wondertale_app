@@ -71,19 +71,13 @@ class _StoryCardState extends State<StoryCard> with SingleTickerProviderStateMix
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Header Image / Placeholder ────────────────────────────────
+              // ── Header Image / AI Illustration ────────────────────────────────
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                 child: SizedBox(
                   height: 160,
                   width: double.infinity,
-                  child: widget.story.imageBase64 != null && widget.story.imageBase64!.isNotEmpty
-                      ? Image.memory(
-                          base64Decode(widget.story.imageBase64!),
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _buildPlaceholderHeader(themeIcon),
-                        )
-                      : _buildPlaceholderHeader(themeIcon),
+                  child: _buildCardImageHeader(widget.story, themeIcon),
                 ),
               ),
 
@@ -203,6 +197,35 @@ class _StoryCardState extends State<StoryCard> with SingleTickerProviderStateMix
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCardImageHeader(StoryModel story, String themeIcon) {
+    if (story.imageBase64 != null && story.imageBase64!.isNotEmpty) {
+      try {
+        return Image.memory(
+          base64Decode(story.imageBase64!),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _buildPlaceholderHeader(themeIcon),
+        );
+      } catch (_) {}
+    }
+
+    final prompt = 'cute storybook watercolor illustration for children story titled ${story.title}, theme ${story.theme}, bedtime story art style';
+    final encodedPrompt = Uri.encodeComponent(prompt);
+    final seed = story.id.hashCode.abs();
+    final aiImageUrl = 'https://image.pollinations.ai/prompt/$encodedPrompt?width=800&height=600&seed=$seed&nologo=true';
+
+    return Image.network(
+      aiImageUrl,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return _buildPlaceholderHeader(themeIcon);
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return _buildPlaceholderHeader(themeIcon);
+      },
     );
   }
 }

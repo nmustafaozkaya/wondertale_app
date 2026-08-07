@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state_provider.dart';
-import '../providers/story_provider.dart';
 import '../core/theme/app_theme.dart';
 
+import '../core/constants/app_constants.dart';
+import '../core/localization/app_localizations.dart';
+import '../widgets/language_selector_sheet.dart';
 import 'subscription_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -12,11 +14,9 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppStateProvider>(context);
-    final storyProv = Provider.of<StoryProvider>(context);
-    final isTr = appState.language == 'tr';
-    
-    final email = appState.user?.email ?? 'Ziyaretçi';
-    final name = email.split('@').first;
+    final loc = AppLocalizations.of(context);
+    final name = appState.userName;
+    final email = appState.user?.email ?? loc.get('guestUser');
 
     return Scaffold(
       backgroundColor: AppTheme.bgLight,
@@ -25,11 +25,14 @@ class ProfileScreen extends StatelessWidget {
           SliverAppBar(
             backgroundColor: Colors.transparent,
             pinned: true,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
             expandedHeight: 80,
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               title: Text(
-                'Profil',
+                loc.get('profile'),
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
@@ -60,8 +63,16 @@ class ProfileScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: AppTheme.primaryGradient,
+                            image: appState.userPhotoUrl != null
+                                ? DecorationImage(
+                                    image: NetworkImage(appState.userPhotoUrl!),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
                           ),
-                          child: const Icon(Icons.person_rounded, color: Colors.white, size: 36),
+                          child: appState.userPhotoUrl == null
+                              ? const Icon(Icons.person_rounded, color: Colors.white, size: 36)
+                              : null,
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -186,34 +197,40 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   
-                  // Language Toggle
-                  Container(
-                    decoration: AppTheme.glassCard(
-                      bgColor: AppTheme.bgCard,
-                      borderColor: AppTheme.violet.withValues(alpha: 0.1),
-                    ),
-                    child: ListTile(
-                      leading: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppTheme.violet.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                  // Language Tile
+                  Builder(
+                    builder: (ctx) {
+                      final currentLang = AppConstants.supportedLanguages.firstWhere(
+                        (l) => l.code == appState.language,
+                        orElse: () => AppConstants.supportedLanguages.first,
+                      );
+
+                      return Container(
+                        decoration: AppTheme.glassCard(
+                          bgColor: AppTheme.bgCard,
+                          borderColor: AppTheme.violet.withValues(alpha: 0.1),
                         ),
-                        child: const Icon(Icons.language_rounded, color: AppTheme.violet),
-                      ),
-                      title: const Text('Dil / Language', style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
-                      subtitle: Text(isTr ? 'Türkçe' : 'English', style: const TextStyle(color: AppTheme.textSecondary)),
-                      trailing: Switch(
-                        value: isTr,
-                        activeTrackColor: AppTheme.violet.withValues(alpha: 0.5),
-                        activeThumbColor: AppTheme.violet,
-                        onChanged: (val) {
-                          final newLang = val ? 'tr' : 'en';
-                          appState.setLanguage(newLang);
-                          storyProv.setStoryLanguage(newLang);
-                        },
-                      ),
-                    ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(24),
+                          clipBehavior: Clip.antiAlias,
+                          child: ListTile(
+                            onTap: () => showLanguageSelectorSheet(ctx),
+                            leading: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppTheme.violet.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.language_rounded, color: AppTheme.violet),
+                            ),
+                            title: Text(loc.get('appLanguage'), style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+                            subtitle: Text('${currentLang.flag} ${currentLang.name}', style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+                            trailing: const Icon(Icons.arrow_forward_ios_rounded, color: AppTheme.textSecondary, size: 16),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   
                   const SizedBox(height: 16),
@@ -224,19 +241,24 @@ class ProfileScreen extends StatelessWidget {
                       bgColor: AppTheme.bgCard,
                       borderColor: Colors.redAccent.withValues(alpha: 0.1),
                     ),
-                    child: ListTile(
-                      onTap: () {
-                        appState.signOut();
-                      },
-                      leading: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                    child: Material(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(24),
+                      clipBehavior: Clip.antiAlias,
+                      child: ListTile(
+                        onTap: () {
+                          appState.signOut();
+                        },
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.logout_rounded, color: Colors.redAccent),
                         ),
-                        child: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                        title: Text(loc.get('signOut'), style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600)),
                       ),
-                      title: const Text('Çıkış Yap', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600)),
                     ),
                   ),
                   

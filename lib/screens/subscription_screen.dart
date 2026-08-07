@@ -4,6 +4,7 @@ import '../providers/app_state_provider.dart';
 import '../core/theme/app_theme.dart';
 import '../core/localization/app_localizations.dart';
 import '../widgets/ad_reward_banner.dart';
+import '../widgets/app_back_button.dart';
 
 class SubscriptionScreen extends StatelessWidget {
   const SubscriptionScreen({super.key});
@@ -65,6 +66,9 @@ class SubscriptionScreen extends StatelessWidget {
                   backgroundColor: Colors.transparent,
                   pinned: true,
                   elevation: 0,
+                  scrolledUnderElevation: 0,
+                  surfaceTintColor: Colors.transparent,
+                  leading: const AppBackButton(),
                   title: Text(
                     loc.get('subscription'),
                     style: const TextStyle(
@@ -77,43 +81,50 @@ class SubscriptionScreen extends StatelessWidget {
                   centerTitle: false,
                 ),
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(24, 10, 24, bottomPad + 120),
+                  padding: EdgeInsets.fromLTRB(20, 10, 20, bottomPad + 120),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
                       // ── Crown Hero Card ───────────────────────────────────
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                         decoration: BoxDecoration(
-                          gradient: AppTheme.primaryGradient,
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF1E1B4B),
+                              AppTheme.violet,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           borderRadius: BorderRadius.circular(32),
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.violet.withValues(alpha: 0.45),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
+                              color: AppTheme.violet.withValues(alpha: 0.4),
+                              blurRadius: 28,
+                              offset: const Offset(0, 8),
                             ),
                           ],
                         ),
                         child: Column(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(18),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: 0.2),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                                color: Colors.white.withValues(alpha: 0.18),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                               ),
-                              child: const Text('👑', style: TextStyle(fontSize: 54)),
+                              child: const Text('👑', style: TextStyle(fontSize: 48)),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 20),
                             Text(
                               loc.get('upgradeToUnlimited'),
                               textAlign: TextAlign.center,
                               style: const TextStyle(
-                                fontSize: 26,
+                                fontSize: 24,
                                 fontWeight: FontWeight.w900,
-                                color: AppTheme.textPrimary,
+                                color: Colors.white,
                                 letterSpacing: -0.5,
                                 height: 1.2,
                               ),
@@ -125,20 +136,49 @@ class SubscriptionScreen extends StatelessWidget {
                                   : 'Çocuğunuz için sınırsız, hayal gücü dolu masal dünyasının kapılarını aralayın.',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 15,
-                                color: AppTheme.textPrimary,
+                                fontSize: 14,
+                                color: Colors.white.withValues(alpha: 0.88),
                                 height: 1.5,
                                 fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            // Current Quota Status Badge inside Card
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.star_rounded, color: AppTheme.gold, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    appState.isPremium
+                                        ? loc.get('unlimitedAccess')
+                                        : '${loc.get('quotaLeft')}${appState.remainingQuota}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
 
                       // ── Rewarded Ad Section ───────────────────────────────
-                      const AdRewardBanner(),
-                      const SizedBox(height: 32),
+                      if (!appState.isPremium) ...[
+                        const AdRewardBanner(),
+                        const SizedBox(height: 24),
+                      ],
 
                       // ── Perks List ────────────────────────────────────────
                       const Text(
@@ -150,26 +190,26 @@ class SubscriptionScreen extends StatelessWidget {
                           letterSpacing: -0.2,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
 
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: AppTheme.glassCard(
-                          bgColor: const Color(0xFF0F1338),
-                          borderColor: Colors.white.withValues(alpha: 0.08),
+                          bgColor: const Color(0xFF1E1B4B),
+                          borderColor: AppTheme.violet.withValues(alpha: 0.2),
                           radius: 28,
                         ),
                         child: Column(
                           children: [
                             _buildPerkRow('✨', 'Sınırsız özelleştirilebilir masal üretimi'),
-                            _buildPerkRow('🎨', 'Masallara özel, yapay zeka çizimleri'),
+                            _buildPerkRow('🎨', 'Masallara özel yapay zeka illüstrasyonları'),
                             _buildPerkRow('🔊', 'Yüksek kaliteli sesli hikaye okuma'),
                             _buildPerkRow('🚫', 'Reklamsız ve kesintisiz deneyim'),
                             _buildPerkRow('📚', 'Sınırsız hikaye kaydetme ve kütüphane'),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 32),
 
                       // ── Subscribe Button ──────────────────────────────────
                       if (!appState.isPremium) ...[
@@ -177,7 +217,7 @@ class SubscriptionScreen extends StatelessWidget {
                           onTap: appState.iapService.buySubscription,
                           child: Container(
                             width: double.infinity,
-                            height: 64,
+                            height: 60,
                             decoration: BoxDecoration(
                               gradient: AppTheme.goldGradient,
                               borderRadius: BorderRadius.circular(22),
@@ -194,7 +234,7 @@ class SubscriptionScreen extends StatelessWidget {
                                 loc.get('subscribeMonthly'),
                                 style: const TextStyle(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w900,
                                   color: Colors.black,
                                   letterSpacing: 0.5,
                                 ),
@@ -202,13 +242,13 @@ class SubscriptionScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         Center(
                           child: TextButton(
                             onPressed: appState.iapService.restorePurchases,
                             child: Text(
                               loc.get('restorePurchases'),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppTheme.textSecondary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -266,11 +306,11 @@ class SubscriptionScreen extends StatelessWidget {
               padding: const EdgeInsets.only(top: 2),
               child: Text(
                 text,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 15,
-                  color: AppTheme.textPrimary,
+                  color: Colors.white,
                   height: 1.4,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

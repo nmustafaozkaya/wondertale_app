@@ -82,6 +82,16 @@ class AdRewardBanner extends StatelessWidget {
                     ),
                   );
                 },
+                onAdNotReady: (msg) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(msg),
+                      backgroundColor: Colors.orange,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  );
+                },
               );
             },
             child: Container(

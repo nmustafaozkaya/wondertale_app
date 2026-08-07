@@ -66,12 +66,13 @@ class _GenerationScreenState extends State<GenerationScreen>
     final appState = Provider.of<AppStateProvider>(context, listen: false);
     final storyProv = Provider.of<StoryProvider>(context, listen: false);
 
+    // Düşürme işlemini masal üretimi başladığı anda garanti et
+    await appState.consumeQuota();
+
     final success = await storyProv.generateStory(uid: appState.user?.uid);
     if (!mounted) return;
 
     if (success && storyProv.currentStory != null) {
-      await appState.consumeQuota();
-      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => StoryDetailScreen(story: storyProv.currentStory!)),
